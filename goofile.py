@@ -16,7 +16,9 @@ import re
 import getopt
 import string
 
-def search(dmn, file):
+from tqdm import tqdm
+
+def search(dmn, file, download=False):
 
    session = requests.session()
    session.headers.update({'User-Agent': 'Mozilla/5.0'})
@@ -35,28 +37,39 @@ def search(dmn, file):
    url = list(set(url))
 
    for u in url:
-      print("https://%s" % u)
+      _url = "https://%s" % u
+      _filename = u.split('/')[-1]
+      print(_url)
 
+      if download is True:
+          response = requests.get(_url, stream=True)
+          with open(_filename, "wb") as handle:
+             for data in tqdm(response.iter_content()):
+                 handle.write(data)
 
 def __usage():
    print ("""   
-[Goofile] 
+Goofile [ kall.micke@gmail.com ]
+This tool search a domain after google indexed files.
 
 usage: goofile <options>
        -d: domain to search
-       -f: filetype (ex, pdf)     
+       -f: filetype (ex, pdf)  
+       -w: download files
 
-example: ./goofile.py -d test.com -f txt
+example: ./goofile.py -d test.com -f txt [-w]
 """)
    sys.exit()
 
 
 if __name__ == "__main__":
 
+        download = False
+
         if len(sys.argv) < 2:
                 __usage()
         try :
-              opts, args = getopt.getopt(sys.argv[1:],"d:f:")
+              opts, args = getopt.getopt(sys.argv[1:],"d:f:w")
 
         except getopt.GetoptError:
                 __usage()
@@ -67,6 +80,7 @@ if __name__ == "__main__":
                file=arg
             elif opt == '-d':
                 dmn=arg
+            elif opt == '-w':
+                download = True
 
-        print("Searching in %s for %s\n" % (dmn, file))
-        search(dmn, file)
+        search(dmn, file, download)
